@@ -44,7 +44,9 @@ pub fn validate_domain(input: &str) -> Result<String, DomainValidationError> {
             || label.len() > 63
             || label.starts_with('-')
             || label.ends_with('-')
-            || !label.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
+            || !label
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-')
         {
             return Err(DomainValidationError::InvalidLabel);
         }
@@ -64,16 +66,25 @@ mod tests {
 
     #[test]
     fn rejects_ip_addresses() {
-        assert_eq!(validate_domain("192.0.2.10"), Err(DomainValidationError::IpAddress));
+        assert_eq!(
+            validate_domain("192.0.2.10"),
+            Err(DomainValidationError::IpAddress)
+        );
     }
 
     #[test]
     fn rejects_invalid_labels() {
-        assert_eq!(validate_domain("-bad.example"), Err(DomainValidationError::InvalidLabel));
+        assert_eq!(
+            validate_domain("-bad.example"),
+            Err(DomainValidationError::InvalidLabel)
+        );
     }
 
     #[test]
     fn requires_suffix() {
-        assert_eq!(validate_domain("localhost"), Err(DomainValidationError::MissingSuffix));
+        assert_eq!(
+            validate_domain("localhost"),
+            Err(DomainValidationError::MissingSuffix)
+        );
     }
 }
