@@ -1,0 +1,19 @@
+[package]
+name = "fieldwork-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "fieldwork_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+fieldwork-core = { path = "../../../crates/fieldwork-core" }
+fieldwork-infrastructure = { path = "../../../crates/fieldwork-infrastructure" }
+tauri.workspace = true
+tauri-plugin-process.workspace = true
+tauri-plugin-updater.workspace = true
