@@ -1,0 +1,21 @@
+# Rust
+/target
+**/target
+Cargo.lock
+
+# Node
+node_modules
+dist
+npm-debug.log*
+*.tsbuildinfo
+
+# Tauri
+src-tauri/target
+src-tauri/gen/schemas
+
+# Secrets
+.env
+.env.*
+*.key
+*.key.pub
+*.sig
