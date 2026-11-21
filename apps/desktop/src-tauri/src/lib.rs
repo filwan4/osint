@@ -2,8 +2,7 @@
 
 #[tauri::command]
 fn validate_domain(domain: String) -> Result<String, String> {
-    fieldwork_infrastructure::validate_domain(&domain)
-        .map_err(|error| error.to_string())
+    fieldwork_infrastructure::validate_domain(&domain).map_err(|error| error.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
