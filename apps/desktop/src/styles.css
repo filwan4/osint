@@ -36,7 +36,7 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 .topbar { height: 66px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 .breadcrumb { color: #aab4c2; font-size: 11px; }
 .breadcrumb span { padding: 0 8px; color: #596678; }
-.update-button { border: 1px solid #303d50; border-radius: 6px; padding: 8px 12px; color: #c5d5f4; background: #141e2c; font-size: 10px; }
+.update-button { display: inline-block; text-decoration: none; border: 1px solid #303d50; border-radius: 6px; padding: 8px 12px; color: #c5d5f4; background: #141e2c; font-size: 10px; }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; padding: 39px 0 27px; }
 h1 { margin: 9px 0 7px; font-size: 29px; font-weight: 650; letter-spacing: -.04em; }
 .lead, .panel-description { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
