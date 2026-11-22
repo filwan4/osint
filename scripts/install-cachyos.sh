@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+REPO="filwan4/osint"
+API_URL="https://api.github.com/repos/$REPO/releases/latest"
+RAW_ICON_URL="https://raw.githubusercontent.com/$REPO/main/apps/desktop/src-tauri/icons/icon.svg"
+
+fail() {
+  echo "Fieldwork installer: $1" >&2
+  exit 1
+}
+
+if [[ "$(uname -m)" != "x86_64" ]]; then
+  fail "This release currently supports x86_64 only."
+fi
+
+if ! command -v pacman >/dev/null 2>&1; then
+  fail "This installer is intended for CachyOS / Arch Linux (pacman)."
+fi
+
+if [[ "$EUID" -eq 0 ]]; then
+  SUDO=""
+else
+  command -v sudo >/dev/null 2>&1 || fail "sudo is required to install system dependencies."
+  SUDO="sudo"
+fi
+
+if ! command -v curl >/dev/null 2>&1 || ! command -v python3 >/dev/null 2>&1; then
+  echo "Installing curl and Python..."
+  $SUDO pacman -S --needed curl python
+fi
+
+RUNTIME_PACKAGES=(
+  webkit2gtk-4.1
+  gtk3
+  libappindicator-gtk3
+  openssl
+  hicolor-icon-theme
+  desktop-file-utils
+)
+
+MISSING_PACKAGES=()
+for package in "${RUNTIME_PACKAGES[@]}"; do
+  if ! pacman -Q "$package" >/dev/null 2>&1; then
+    MISSING_PACKAGES+=("$package")
+  fi
+done
+
+if [[ "${#MISSING_PACKAGES[@]}" -gt 0 ]]; then
+  echo "Installing missing runtime dependencies: ${MISSING_PACKAGES[*]}"
+  $SUDO pacman -S --needed "${MISSING_PACKAGES[@]}"
+fi
+
+echo "Looking up the latest Fieldwork release..."
+RELEASE_JSON="$(curl -fsSL -H 'Accept: application/vnd.github+json' "$API_URL")" ||
+  fail "Could not query GitHub Releases."
+
+DOWNLOAD_URL="$(python3 -c '
+import json
+import sys
+
+release = json.load(sys.stdin)
+assets = [
+    asset for asset in release.get("assets", [])
+    if asset.get("name", "").lower().endswith(".appimage")
+]
+native = [
+    asset for asset in assets
+    if "amd64" in asset.get("name", "").lower()
+    or "x86_64" in asset.get("name", "").lower()
+]
+choices = native or (assets if len(assets) == 1 else [])
+print(choices[0]["browser_download_url"] if choices else "")
+' <<< "$RELEASE_JSON")"
+
+[[ -n "$DOWNLOAD_URL" ]] || fail "No x86_64 AppImage was found in the latest published release."
+
+INSTALL_DIR="$HOME/.local/opt/fieldwork"
+BIN_DIR="$HOME/.local/bin"
+APP_PATH="$INSTALL_DIR/Fieldwork.AppImage"
+ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
+DESKTOP_DIR="$HOME/.local/share/applications"
+TEMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$ICON_DIR" "$DESKTOP_DIR"
+
+echo "Downloading Fieldwork..."
+curl -fL --retry 3 "$DOWNLOAD_URL" -o "$TEMP_DIR/Fieldwork.AppImage" ||
+  fail "The AppImage download failed."
+
+if [[ "$(head -c 4 "$TEMP_DIR/Fieldwork.AppImage" | od -An -tx1 | tr -d ' \n')" != "7f454c46" ]]; then
+  fail "The downloaded file is not a valid Linux executable."
+fi
+
+install -m 755 "$TEMP_DIR/Fieldwork.AppImage" "$APP_PATH"
+
+ICON_NAME="applications-development"
+if curl -fsSL "$RAW_ICON_URL" -o "$ICON_DIR/fieldwork.svg"; then
+  ICON_NAME="fieldwork"
+fi
+
+cat > "$BIN_DIR/fieldwork" <<EOF
+#!/usr/bin/env bash
+exec env APPIMAGE_EXTRACT_AND_RUN=1 "$APP_PATH" "\$@"
+EOF
+chmod 755 "$BIN_DIR/fieldwork"
+
+cat > "$DESKTOP_DIR/fieldwork.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Fieldwork
+GenericName=OSINT Research Workspace
+Comment=Public-source research and analysis workspace
+Exec=$BIN_DIR/fieldwork
+Icon=$ICON_NAME
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true
+EOF
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1 || true
+fi
+
+echo
+echo "Fieldwork is installed."
+echo "Launch it from Rofi by searching for: Fieldwork"
+echo "Or run: $BIN_DIR/fieldwork"
+echo "To update later, run this installer again."
