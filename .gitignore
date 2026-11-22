@@ -12,6 +12,7 @@ npm-debug.log*
 # Tauri
 src-tauri/target
 src-tauri/gen/schemas
+apps/desktop/src-tauri/icons/icon.png
 
 # Secrets
 .env
