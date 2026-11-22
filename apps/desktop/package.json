@@ -7,12 +7,11 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "pretauri": "bash ../../scripts/generate-icon.sh",
     "tauri": "tauri"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-process": "^2.0.0",
-    "@tauri-apps/plugin-updater": "^2.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
