@@ -8,7 +8,7 @@ The project is in its foundation stage (v0.1.2): desktop shell, Rust workspace, 
 
 The current release target is Linux x86_64.
 
-The installer downloads the latest published AppImage from GitHub Releases, checks and installs the required runtime packages with pacman, installs the app under `~/.local/opt/fieldwork`, and creates a standard XDG desktop entry plus a command-line launcher.
+The installer downloads the latest published AppImage from GitHub Releases, checks and installs the required runtime packages with pacman, verifies the artifact's SHA-256 digest, installs the app under `~/.local/opt/fieldwork`, and creates a standard XDG desktop entry plus a command-line launcher.
 
 ```bash
 curl -fL https://raw.githubusercontent.com/filwan4/osint/main/scripts/install-cachyos.sh \
@@ -22,9 +22,9 @@ Launch Fieldwork from an application menu that indexes XDG desktop entries, or r
 ~/.local/bin/fieldwork
 ```
 
-To update Fieldwork, run the same installer command again. It replaces the existing AppImage with the latest published version and keeps the launcher in place.
+To update Fieldwork, run the same installer command again. It verifies the downloaded artifact and replaces the existing AppImage only after the verification succeeds.
 
-The installer supports CachyOS and Arch Linux on x86_64. It uses pacman to ensure the WebKitGTK and desktop runtime dependencies are present. It does not install development tools or compile the application.
+The installer supports CachyOS and Arch Linux on x86_64. It uses pacman to ensure the WebKitGTK and desktop runtime dependencies are present. It does not install development tools or compile the application. Run the installer as your normal desktop user, not with sudo; it requests sudo only when installing system packages.
 
 ## Scope
 
@@ -44,7 +44,7 @@ Fieldwork is not designed to identify, profile, or track private individuals. Co
 - `crates/fieldwork-core`: shared investigation and evidence models.
 - `crates/fieldwork-infrastructure`: domain validation and public-infrastructure primitives.
 - `.github/workflows`: CI and Linux release automation.
-- `scripts`: icon generation and CachyOS installer.
+- `scripts`: icon generation, version verification, and CachyOS installer.
 - `docs`: architecture notes.
 
 ## Development
@@ -69,20 +69,22 @@ npm install
 npm run tauri dev
 ```
 
-The Tauri npm pre-hook generates the PNG app icon from the tracked SVG before dev and release builds. It uses `rsvg-convert` or ImageMagick.
+The Tauri npm pre-hook generates the PNG app icon from the tracked SVG before dev and release builds. It uses `rsvg-convert` or ImageMagick. CI also compiles the desktop Tauri crate, checks installer shell syntax, and verifies that Cargo, npm, and Tauri versions match.
 
 From the repository root:
 
 ```bash
 cargo fmt --all -- --check
 cargo test -p fieldwork-core -p fieldwork-infrastructure
+cargo check -p fieldwork-desktop
 ```
 
 ### Creating a release
 
-Keep the version in `Cargo.toml`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/tauri.conf.json` in sync. Then push a matching version tag:
+Keep the version in `Cargo.toml`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/tauri.conf.json` in sync. The `scripts/check-version.mjs` check verifies these values and checks the tag against them during release builds. Then push a matching version tag:
 
 ```bash
+node scripts/check-version.mjs
 git tag v0.1.2
 git push origin v0.1.2
 ```

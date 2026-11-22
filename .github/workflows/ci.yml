@@ -10,28 +10,65 @@ permissions:
   contents: read
 
 jobs:
-  frontend:
-    name: Frontend build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/desktop
+  checks:
+    name: Build and test
+    runs-on: ubuntu-22.04
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
-      - run: npm run build
 
-  rust:
-    name: Rust checks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --all -- --check
-      - run: cargo test -p fieldwork-core -p fieldwork-infrastructure
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Tauri Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            librsvg2-dev \
+            librsvg2-bin \
+            libayatana-appindicator3-dev \
+            patchelf
+
+      - name: Verify application versions
+        run: node scripts/check-version.mjs
+
+      - name: Check installer shell syntax
+        run: bash -n scripts/install-cachyos.sh scripts/generate-icon.sh
+
+      - name: Install frontend dependencies
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build frontend
+        working-directory: apps/desktop
+        run: npm run build
+
+      - name: Generate Tauri icon
+        run: bash scripts/generate-icon.sh
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Test shared crates
+        run: cargo test -p fieldwork-core -p fieldwork-infrastructure
+
+      - name: Compile desktop application
+        run: cargo check -p fieldwork-desktop

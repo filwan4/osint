@@ -39,6 +39,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Verify application and tag versions
+        run: node scripts/check-version.mjs
+
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -60,9 +63,9 @@ jobs:
             Download the Fieldwork AppImage below.
 
             ### CachyOS / Arch Linux
-            The repository includes scripts/install-cachyos.sh, which installs runtime dependencies, downloads the latest AppImage, and adds Fieldwork to your application menu.
+            The repository includes scripts/install-cachyos.sh, which installs runtime dependencies, verifies the AppImage SHA-256 digest, and adds Fieldwork to your application menu.
 
-            In-app signed updates are not enabled yet. Re-run the installer to update to the latest release.
+            In-app signed updates are not enabled yet. Re-run the installer to update.
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: false

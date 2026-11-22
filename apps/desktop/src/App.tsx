@@ -109,7 +109,12 @@ export default function App() {
     event.preventDefault();
 
     const candidate = domain.trim();
-    if (!candidate || isValidating) {
+    if (isValidating) {
+      return;
+    }
+    if (!candidate) {
+      setNormalizedDomain("");
+      setDomainError("Enter a domain name before validating.");
       return;
     }
 
@@ -310,21 +315,22 @@ export default function App() {
                 <input
                   type="text"
                   value={domain}
+                  disabled={isValidating}
                   onChange={(event) => handleDomainChange(event.currentTarget.value)}
                   placeholder="example.org"
                   aria-label="DNS domain to validate"
-                  aria-describedby="domain-help"
+                  aria-describedby="domain-help domain-feedback"
                   aria-invalid={Boolean(domainError)}
                   autoCapitalize="none"
                   autoComplete="off"
                   autoCorrect="off"
                   spellCheck={false}
-                  maxLength={255}
+                  maxLength={254}
                   required
                 />
                 <button
                   type="submit"
-                  disabled={!domain.trim() || isValidating}
+                  disabled={!domain.length || isValidating}
                 >
                   {isValidating ? "Checking…" : "Validate"}
                 </button>
@@ -335,7 +341,7 @@ export default function App() {
               </p>
             </form>
 
-            <div className="feedback" aria-live="polite" aria-atomic="true">
+            <div id="domain-feedback" className="feedback" aria-live="polite" aria-atomic="true" aria-busy={isValidating}>
               {isValidating && (
                 <p className="result pending">Checking locally…</p>
               )}
@@ -343,7 +349,7 @@ export default function App() {
                 <p className="result success">
                   <span aria-hidden="true">✓</span>
                   <span>
-                    Valid DNS name: <strong>{normalizedDomain}</strong>
+                    Valid hostname syntax: <strong>{normalizedDomain}</strong>
                   </span>
                 </p>
               )}

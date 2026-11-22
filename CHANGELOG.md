@@ -2,12 +2,16 @@
 
 All notable changes to Fieldwork are documented here.
 
-## [0.1.2] - Unreleased
+## [0.1.2] - 2026-11-22
 
 ### Improved
 - Refreshed the desktop interface with clearer hierarchy, more consistent spacing, and responsive layouts.
 - Made the displayed application version follow package metadata.
 - Improved domain-validation feedback, pending state, keyboard submission, and accessibility labels.
+- Prevented stale validation results while a request is in progress and made whitespace-only input errors explicit.
+- Improved small-text readability across the desktop interface.
+- Added AppImage SHA-256 verification and atomic installation to the CachyOS installer.
+- Expanded CI to compile the complete Tauri desktop application and check release-version consistency.
 - Expanded domain validation tests and clarified the ASCII/Punycode requirement.
 - Updated CachyOS installer output and project documentation.
 
@@ -16,6 +20,7 @@ All notable changes to Fieldwork are documented here.
 - Clear stale validation results when the input changes.
 - Correct outdated version, launcher, and updater references in the interface and documentation.
 - Lower the minimum desktop window size to match the responsive layout.
+- Remove the unused process plugin and its unnecessary permissions.
 
 ## [0.1.1] - 2026-11-22
 

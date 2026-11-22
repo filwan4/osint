@@ -16,4 +16,3 @@ fieldwork-core = { path = "../../../crates/fieldwork-core" }
 fieldwork-infrastructure = { path = "../../../crates/fieldwork-infrastructure" }
 serde_json.workspace = true
 tauri.workspace = true
-tauri-plugin-process.workspace = true

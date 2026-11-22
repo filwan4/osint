@@ -19,15 +19,15 @@ if ! command -v pacman >/dev/null 2>&1; then
 fi
 
 if [[ "$EUID" -eq 0 ]]; then
-  SUDO=""
-else
-  command -v sudo >/dev/null 2>&1 || fail "sudo is required to install system dependencies."
-  SUDO="sudo"
+  fail "Run this installer as your desktop user without sudo. It will request sudo only when installing system packages."
 fi
+
+command -v sudo >/dev/null 2>&1 || fail "sudo is required to install system dependencies."
+SUDO=(sudo)
 
 if ! command -v curl >/dev/null 2>&1 || ! command -v python3 >/dev/null 2>&1; then
   echo "Installing curl and Python..."
-  $SUDO pacman -S --needed curl python
+  "${SUDO[@]}" pacman -S --needed curl python
 fi
 
 RUNTIME_PACKAGES=(
@@ -49,14 +49,14 @@ done
 
 if [[ "${#MISSING_PACKAGES[@]}" -gt 0 ]]; then
   echo "Installing missing runtime dependencies: ${MISSING_PACKAGES[*]}"
-  $SUDO pacman -S --needed "${MISSING_PACKAGES[@]}"
+  "${SUDO[@]}" pacman -S --needed "${MISSING_PACKAGES[@]}"
 fi
 
 echo "Looking up the latest Fieldwork release..."
 RELEASE_JSON="$(curl -fsSL -H 'Accept: application/vnd.github+json' "$API_URL")" ||
   fail "Could not query GitHub Releases."
 
-DOWNLOAD_URL="$(python3 -c '
+ASSET_DETAILS="$(python3 -c '
 import json
 import sys
 
@@ -71,18 +71,29 @@ native = [
     or "x86_64" in asset.get("name", "").lower()
 ]
 choices = native or (assets if len(assets) == 1 else [])
-print(choices[0]["browser_download_url"] if choices else "")
+if choices:
+    asset = choices[0]
+    print("|".join((
+        release.get("tag_name", ""),
+        asset.get("browser_download_url", ""),
+        asset.get("digest", ""),
+    )))
 ' <<< "$RELEASE_JSON")"
 
+IFS='|' read -r RELEASE_TAG DOWNLOAD_URL EXPECTED_DIGEST <<< "$ASSET_DETAILS"
+
 [[ -n "$DOWNLOAD_URL" ]] || fail "No x86_64 AppImage was found in the latest published release."
+[[ "$EXPECTED_DIGEST" =~ ^sha256:[[:xdigit:]]{64}$ ]] ||
+  fail "The latest release does not provide a valid SHA-256 digest."
 
 INSTALL_DIR="$HOME/.local/opt/fieldwork"
 BIN_DIR="$HOME/.local/bin"
 APP_PATH="$INSTALL_DIR/Fieldwork.AppImage"
+STAGED_APP_PATH="$INSTALL_DIR/.Fieldwork.AppImage.new"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 DESKTOP_DIR="$HOME/.local/share/applications"
 TEMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TEMP_DIR"' EXIT
+trap 'rm -rf "$TEMP_DIR"; rm -f "$STAGED_APP_PATH"' EXIT
 
 mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$ICON_DIR" "$DESKTOP_DIR"
 
@@ -94,7 +105,13 @@ if [[ "$(head -c 4 "$TEMP_DIR/Fieldwork.AppImage" | od -An -tx1 | tr -d ' \n')" 
   fail "The downloaded file is not a valid Linux executable."
 fi
 
-install -m 755 "$TEMP_DIR/Fieldwork.AppImage" "$APP_PATH"
+EXPECTED_SHA256="${EXPECTED_DIGEST#sha256:}"
+ACTUAL_SHA256="$(sha256sum "$TEMP_DIR/Fieldwork.AppImage" | awk '{print $1}')"
+[[ "$ACTUAL_SHA256" == "$EXPECTED_SHA256" ]] ||
+  fail "The downloaded AppImage failed its SHA-256 integrity check."
+
+install -m 755 "$TEMP_DIR/Fieldwork.AppImage" "$STAGED_APP_PATH"
+mv -f "$STAGED_APP_PATH" "$APP_PATH"
 
 ICON_NAME="applications-development"
 if curl -fsSL "$RAW_ICON_URL" -o "$ICON_DIR/fieldwork.svg"; then
@@ -130,7 +147,7 @@ if command -v update-desktop-database >/dev/null 2>&1; then
 fi
 
 echo
-echo "Fieldwork is installed."
+echo "Fieldwork $RELEASE_TAG is installed."
 echo "Desktop entry: $DESKTOP_DIR/fieldwork.desktop"
 echo "Command: $BIN_DIR/fieldwork"
 echo "To update later, run this installer again."
