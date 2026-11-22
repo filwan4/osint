@@ -131,6 +131,10 @@ fi
 
 echo
 echo "Fieldwork is installed."
-echo "Launch it from Rofi by searching for: Fieldwork"
-echo "Or run: $BIN_DIR/fieldwork"
+echo "Desktop entry: $DESKTOP_DIR/fieldwork.desktop"
+echo "Command: $BIN_DIR/fieldwork"
 echo "To update later, run this installer again."
+
+if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
+  echo "Note: $BIN_DIR is not currently in PATH; the desktop entry still uses its full path."
+fi

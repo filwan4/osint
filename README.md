@@ -2,13 +2,13 @@
 
 Fieldwork is a modular desktop workspace for open-source research and analysis, built with Rust and Tauri 2.
 
-The repository is at foundation stage (v0.1.0): desktop shell, Rust workspace, local domain validation, CI, and Linux distribution automation.
+The project is in its foundation stage (v0.1.2): desktop shell, Rust workspace, local DNS-name validation, CI, and Linux distribution automation. Most research modules are planned and are not active collectors yet.
 
 ## Install on CachyOS / Arch Linux
 
-The first release target is Linux x86_64.
+The current release target is Linux x86_64.
 
-The installer downloads the latest published AppImage from GitHub Releases, checks and installs the required runtime packages with pacman, installs the app under `~/.local/opt/fieldwork`, and creates a desktop entry plus a launcher for Rofi and other application menus.
+The installer downloads the latest published AppImage from GitHub Releases, checks and installs the required runtime packages with pacman, installs the app under `~/.local/opt/fieldwork`, and creates a standard XDG desktop entry plus a command-line launcher.
 
 ```bash
 curl -fL https://raw.githubusercontent.com/filwan4/osint/main/scripts/install-cachyos.sh \
@@ -16,10 +16,10 @@ curl -fL https://raw.githubusercontent.com/filwan4/osint/main/scripts/install-ca
 bash /tmp/fieldwork-install.sh
 ```
 
-After installation, open Rofi and search for **Fieldwork**, or run:
+Launch Fieldwork from an application menu that indexes XDG desktop entries, or run:
 
 ```bash
-fieldwork
+~/.local/bin/fieldwork
 ```
 
 To update Fieldwork, run the same installer command again. It replaces the existing AppImage with the latest published version and keeps the launcher in place.
@@ -43,7 +43,7 @@ Fieldwork is not designed to identify, profile, or track private individuals. Co
 - `apps/desktop`: Tauri 2 + React desktop application.
 - `crates/fieldwork-core`: shared investigation and evidence models.
 - `crates/fieldwork-infrastructure`: domain validation and public-infrastructure primitives.
-- `.github/workflows`: CI and release automation.
+- `.github/workflows`: CI and Linux release automation.
 - `scripts`: icon generation and CachyOS installer.
 - `docs`: architecture notes.
 
@@ -78,28 +78,28 @@ cargo fmt --all -- --check
 cargo test -p fieldwork-core -p fieldwork-infrastructure
 ```
 
-## Releases
+### Creating a release
 
-Push a version tag matching the Tauri app version to build and publish a Linux x86_64 AppImage:
+Keep the version in `Cargo.toml`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/tauri.conf.json` in sync. Then push a matching version tag:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 GitHub Actions builds the frontend and Rust application on Ubuntu 22.04 and publishes the AppImage to GitHub Releases. Ubuntu 22.04 is used as a conservative Linux build baseline for glibc compatibility.
 
 ## Updates
 
-For now, updates are installed by running the CachyOS installer again. The Tauri updater plugin remains available in the project, but signed in-app updates are not enabled until a signing keypair is generated and the private key is stored as GitHub Actions secrets. Never commit or share the private signing key.
+Updates are currently installed manually by running the CachyOS installer again. Signed in-app updates are not enabled.
 
 ## Status
 
 - [x] Rust workspace and shared evidence models
 - [x] Tauri 2 desktop shell
-- [x] Local domain validation
+- [x] Local DNS-name validation
 - [x] CI and Linux AppImage release workflow
-- [x] CachyOS installer and desktop launcher
+- [x] CachyOS installer and XDG desktop launcher
 - [ ] First live public-source collector
 - [ ] Persistent investigation storage
 - [ ] Evidence graph and report export
