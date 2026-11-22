@@ -2,7 +2,7 @@
 
 Fieldwork is a modular desktop workspace for open-source research and analysis, built with Rust and Tauri 2.
 
-The project is in its foundation stage (v0.1.2): desktop shell, Rust workspace, local DNS-name validation, CI, and Linux distribution automation. Most research modules are planned and are not active collectors yet.
+Version 0.2.0 adds local investigation management, source-backed evidence records, entity and relationship registers, coordinate handling, text-file inspection, RSS source registration, and report/backup export. It is a local research workspace, not yet a fully automated OSINT collection suite.
 
 ## Install on CachyOS / Arch Linux
 
@@ -24,19 +24,29 @@ Launch Fieldwork from an application menu that indexes XDG desktop entries, or r
 
 To update Fieldwork, run the same installer command again. It verifies the downloaded artifact and replaces the existing AppImage only after the verification succeeds.
 
-The installer supports CachyOS and Arch Linux on x86_64. It uses pacman to ensure the WebKitGTK and desktop runtime dependencies are present. It does not install development tools or compile the application. Run the installer as your normal desktop user, not with sudo; it requests sudo only when installing system packages.
+The installer supports CachyOS and Arch Linux on x86_64. Run it as your normal desktop user, not with sudo.
 
-## Scope
+## Current modules
 
-- Public domain and network metadata.
-- GEOINT using public geographic datasets and maps.
-- Public media and RSS monitoring.
-- Document analysis for files the operator is authorized to inspect.
-- Evidence provenance, timestamps, and confidence labels.
-- Organization, infrastructure, place, and event relationship analysis.
-- Reproducible reports with source references.
+- **Investigations:** local workspaces, summaries, evidence records, confidence ratings, source URLs, and timestamps.
+- **Infrastructure:** local DNS hostname syntax validation and a place to organize public network observations.
+- **GEOINT:** latitude/longitude validation, local place records, and OpenStreetMap links.
+- **Media intelligence:** RSS/Atom source URL register.
+- **Document analysis:** local text extraction and basic statistics for TXT, Markdown, CSV, and LOG files up to 2 MB.
+- **Entity analysis:** records for public organizations, places, events, datasets, and infrastructure.
+- **Relationship graph:** manual links between registered entities.
+- **Reports & export:** Markdown/JSON investigation exports and full-workspace JSON backup/restore.
+- **Settings:** local data controls and application information.
 
-Fieldwork is not designed to identify, profile, or track private individuals. Collectors must respect source terms, privacy, rate limits, and applicable law. Findings must distinguish verified facts from hypotheses.
+## Current limitations
+
+This release does not yet include live DNS/RDAP/certificate-transparency collectors, RSS fetching, media timeline aggregation, PDF/DOCX parsing, OCR, automatic entity extraction, an interactive graph visualization, or signed in-app updates. The UI labels and documentation must not be interpreted as claims that these collectors are active.
+
+Workspace data is stored in the desktop app's local WebView storage. It is not encrypted or synchronized. Export backups regularly. Do not store passwords, access tokens, or sensitive personal information.
+
+## Scope and safety
+
+Fieldwork focuses on public infrastructure, organizations, places, events, public media, public datasets, and documents the operator is authorized to inspect. It is not designed to identify, profile, or track private individuals. Respect source terms, privacy, rate limits, and applicable law. Keep verified facts separate from hypotheses.
 
 ## Layout
 
@@ -69,11 +79,10 @@ npm install
 npm run tauri dev
 ```
 
-The Tauri npm pre-hook generates the PNG app icon from the tracked SVG before dev and release builds. It uses `rsvg-convert` or ImageMagick. CI also compiles the desktop Tauri crate, checks installer shell syntax, and verifies that Cargo, npm, and Tauri versions match.
-
 From the repository root:
 
 ```bash
+node scripts/check-version.mjs
 cargo fmt --all -- --check
 cargo test -p fieldwork-core -p fieldwork-infrastructure
 cargo check -p fieldwork-desktop
@@ -81,31 +90,19 @@ cargo check -p fieldwork-desktop
 
 ### Creating a release
 
-Keep the version in `Cargo.toml`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/tauri.conf.json` in sync. The `scripts/check-version.mjs` check verifies these values and checks the tag against them during release builds. Then push a matching version tag:
+Keep the version in `Cargo.toml`, `apps/desktop/package.json`, and `apps/desktop/src-tauri/tauri.conf.json` in sync. Verify and tag the matching version:
 
 ```bash
 node scripts/check-version.mjs
-git tag v0.1.2
-git push origin v0.1.2
+git tag -a v0.2.0 -m "Fieldwork v0.2.0"
+git push origin v0.2.0
 ```
 
-GitHub Actions builds the frontend and Rust application on Ubuntu 22.04 and publishes the AppImage to GitHub Releases. Ubuntu 22.04 is used as a conservative Linux build baseline for glibc compatibility.
+GitHub Actions builds the frontend and Rust application on Ubuntu 22.04 and publishes the AppImage to GitHub Releases.
 
 ## Updates
 
 Updates are currently installed manually by running the CachyOS installer again. Signed in-app updates are not enabled.
-
-## Status
-
-- [x] Rust workspace and shared evidence models
-- [x] Tauri 2 desktop shell
-- [x] Local DNS-name validation
-- [x] CI and Linux AppImage release workflow
-- [x] CachyOS installer and XDG desktop launcher
-- [ ] First live public-source collector
-- [ ] Persistent investigation storage
-- [ ] Evidence graph and report export
-- [ ] Signed in-app updates
 
 ## License
 
