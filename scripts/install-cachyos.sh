@@ -35,6 +35,7 @@ RUNTIME_PACKAGES=(
   gtk3
   libappindicator-gtk3
   openssl
+  fuse2
   hicolor-icon-theme
   desktop-file-utils
 )
