@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { check } from "@tauri-apps/plugin-updater";
-import { relaunch } from "@tauri-apps/plugin-process";
 
 type ModuleCardProps = {
   index: string;
@@ -29,7 +27,6 @@ export default function App() {
   const [domain, setDomain] = useState("");
   const [normalizedDomain, setNormalizedDomain] = useState("");
   const [domainError, setDomainError] = useState("");
-  const [updateStatus, setUpdateStatus] = useState("Updates are checked on demand.");
 
   async function validateDomain() {
     setDomainError("");
@@ -39,29 +36,6 @@ export default function App() {
       setNormalizedDomain(result);
     } catch (error) {
       setDomainError(String(error));
-    }
-  }
-
-  async function checkForUpdates() {
-    setUpdateStatus("Checking GitHub Releases…");
-    try {
-      const update = await check();
-      if (!update) {
-        setUpdateStatus("Fieldwork is up to date.");
-        return;
-      }
-
-      setUpdateStatus("Downloading Fieldwork " + update.version + "…");
-      await update.downloadAndInstall((event) => {
-        if (event.event === "Finished") {
-          setUpdateStatus("Update downloaded. Restarting…");
-        } else if (event.event === "Progress") {
-          setUpdateStatus("Downloading update…");
-        }
-      });
-      await relaunch();
-    } catch (error) {
-      setUpdateStatus("Update check failed: " + String(error));
     }
   }
 
@@ -93,7 +67,7 @@ export default function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumb">Workspace <span>/</span> Overview</div>
-          <button className="update-button" onClick={checkForUpdates}>↻ Check for updates</button>
+          <a className="update-button" href="https://github.com/filwan4/osint/releases/latest" target="_blank" rel="noreferrer">↗ Download latest</a>
         </header>
 
         <section className="page-heading">
@@ -102,7 +76,7 @@ export default function App() {
             <h1>Research workspace</h1>
             <p className="lead">A source-aware environment for open-source research and analysis.</p>
           </div>
-          <div className="build-tag"><span /> DEVELOPMENT BUILD</div>
+          <div className="build-tag"><span /> DESKTOP BUILD</div>
         </section>
 
         <section className="metrics-grid">
@@ -162,9 +136,9 @@ export default function App() {
           <div className="panel update-panel">
             <div className="eyebrow">DISTRIBUTION</div>
             <h2>Application updates</h2>
-            <p className="panel-description">Signed updates will be distributed through the public GitHub Releases page.</p>
-            <div className="update-status">{updateStatus}</div>
-            <a href="https://github.com/filwan4/osint/releases" target="_blank" rel="noreferrer">View project releases ↗</a>
+            <p className="panel-description">Run the CachyOS installer again to download the latest release and refresh your application launcher.</p>
+            <div className="update-status">Signed in-app updates will be enabled in a future release.</div>
+            <a href="https://github.com/filwan4/osint/releases/latest" target="_blank" rel="noreferrer">View latest release ↗</a>
           </div>
         </section>
 
