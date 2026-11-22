@@ -165,9 +165,6 @@ mod tests {
 
     #[test]
     fn rejects_empty_input() {
-        assert_eq!(
-            validate_domain("   "),
-            Err(DomainValidationError::Empty)
-        );
+        assert_eq!(validate_domain("   "), Err(DomainValidationError::Empty));
     }
 }
