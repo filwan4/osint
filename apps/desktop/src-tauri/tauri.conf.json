@@ -26,21 +26,10 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
-    "createUpdaterArtifacts": true,
+    "targets": ["appimage"],
+    "icon": ["icons/icon.png"],
     "category": "DeveloperTool",
     "shortDescription": "Open-source research and analysis workspace",
     "longDescription": "A modular desktop workspace for source-aware open-source research and analysis."
-  },
-  "plugins": {
-    "updater": {
-      "pubkey": "REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY",
-      "endpoints": [
-        "https://github.com/filwan4/osint/releases/latest/download/latest.json"
-      ],
-      "windows": {
-        "installMode": "passive"
-      }
-    }
   }
 }
