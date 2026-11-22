@@ -9,19 +9,15 @@ permissions:
   contents: write
 
 jobs:
-  publish:
-    name: Build ${{ matrix.platform }}
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ubuntu-22.04, windows-latest]
+  linux:
+    name: Build Linux AppImage
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out source
+        uses: actions/checkout@v4
 
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
+      - name: Install Tauri Linux build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -33,29 +29,39 @@ jobs:
             libxdo-dev \
             libssl-dev \
             librsvg2-dev \
+            librsvg2-bin \
             libayatana-appindicator3-dev \
             patchelf
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install frontend dependencies
         working-directory: apps/desktop
         run: npm install
 
-      - name: Build and publish draft release
+      - name: Build and publish release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: apps/desktop
           tagName: ${{ github.ref_name }}
           releaseName: "Fieldwork ${{ github.ref_name }}"
-          releaseBody: "See the repository changelog and release notes."
-          releaseDraft: true
-          includeUpdaterJson: true
+          releaseBody: |
+            ## Linux x86_64
+
+            Download the Fieldwork AppImage below.
+
+            ### CachyOS / Arch Linux
+            The repository includes scripts/install-cachyos.sh, which installs runtime dependencies, downloads the latest AppImage, and adds Fieldwork to your application menu.
+
+            In-app signed updates are not enabled yet. Re-run the installer to update to the latest release.
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: false
