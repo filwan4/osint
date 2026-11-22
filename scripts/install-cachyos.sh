@@ -113,12 +113,16 @@ Type=Application
 Name=Fieldwork
 GenericName=OSINT Research Workspace
 Comment=Public-source research and analysis workspace
-Exec=$BIN_DIR/fieldwork
+Exec="$BIN_DIR/fieldwork"
 Icon=$ICON_NAME
 Terminal=false
 Categories=Development;Utility;
 StartupNotify=true
 EOF
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+  gtk-update-icon-cache -q -t -f "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+fi
 
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1 || true
