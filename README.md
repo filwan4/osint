@@ -2,7 +2,29 @@
 
 Fieldwork is a modular desktop workspace for open-source research and analysis, built with Rust and Tauri 2.
 
-The repository is at foundation stage (v0.1.0): desktop shell, Rust workspace, local domain validation, CI, and signed-update release scaffolding.
+The repository is at foundation stage (v0.1.0): desktop shell, Rust workspace, local domain validation, CI, and Linux distribution automation.
+
+## Install on CachyOS / Arch Linux
+
+The first release target is Linux x86_64.
+
+The installer downloads the latest published AppImage from GitHub Releases, checks and installs the required runtime packages with pacman, installs the app under `~/.local/opt/fieldwork`, and creates a desktop entry plus a launcher for Rofi and other application menus.
+
+```bash
+curl -fL https://raw.githubusercontent.com/filwan4/osint/main/scripts/install-cachyos.sh \
+  -o /tmp/fieldwork-install.sh
+bash /tmp/fieldwork-install.sh
+```
+
+After installation, open Rofi and search for **Fieldwork**, or run:
+
+```bash
+fieldwork
+```
+
+To update Fieldwork, run the same installer command again. It replaces the existing AppImage with the latest published version and keeps the launcher in place.
+
+The installer supports CachyOS and Arch Linux on x86_64. It uses pacman to ensure the WebKitGTK and desktop runtime dependencies are present. It does not install development tools or compile the application.
 
 ## Scope
 
@@ -21,22 +43,33 @@ Fieldwork is not designed to identify, profile, or track private individuals. Co
 - `apps/desktop`: Tauri 2 + React desktop application.
 - `crates/fieldwork-core`: shared investigation and evidence models.
 - `crates/fieldwork-infrastructure`: domain validation and public-infrastructure primitives.
-- `.github/workflows`: CI and signed release automation.
+- `.github/workflows`: CI and release automation.
+- `scripts`: icon generation and CachyOS installer.
 - `docs`: architecture notes.
 
-## Prerequisites
+## Development
+
+### Prerequisites
 
 - Rust stable with Rust 2024 edition support.
 - Node.js 22+ and npm.
-- Tauri 2 platform prerequisites: https://v2.tauri.app/start/prerequisites/
+- Tauri Linux dependencies. On Arch/CachyOS:
 
-## Run locally
+```bash
+sudo pacman -S --needed \
+  webkit2gtk-4.1 base-devel curl wget file openssl \
+  appmenu-gtk-module libappindicator-gtk3 librsvg xdotool
+```
+
+### Run locally
 
 ```bash
 cd apps/desktop
 npm install
 npm run tauri dev
 ```
+
+The Tauri npm pre-hook generates the PNG app icon from the tracked SVG before dev and release builds. It uses `rsvg-convert` or ImageMagick.
 
 From the repository root:
 
@@ -45,28 +78,32 @@ cargo fmt --all -- --check
 cargo test -p fieldwork-core -p fieldwork-infrastructure
 ```
 
-## Signed updates
+## Releases
 
-The desktop app uses the official Tauri updater. Updates are distributed through GitHub Releases and verified against the public key embedded in the application.
+Push a version tag matching the Tauri app version to build and publish a Linux x86_64 AppImage:
 
-Before the first release:
-1. Generate a keypair locally: `npm run tauri signer generate -- -w ~/.tauri/fieldwork.key`.
-2. Store the private key as GitHub Actions secret `TAURI_SIGNING_PRIVATE_KEY`.
-3. Store its password as `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` if one was set.
-4. Replace the public-key placeholder in `apps/desktop/src-tauri/tauri.conf.json` with the contents of the generated public key file.
-5. Commit the public key and push a tag such as `v0.1.0`.
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
 
-Never commit the private signing key or password. The updater cannot validate releases until the public key is configured. Releases are created as drafts for review.
+GitHub Actions builds the frontend and Rust application on Ubuntu 22.04 and publishes the AppImage to GitHub Releases. Ubuntu 22.04 is used as a conservative Linux build baseline for glibc compatibility.
+
+## Updates
+
+For now, updates are installed by running the CachyOS installer again. The Tauri updater plugin remains available in the project, but signed in-app updates are not enabled until a signing keypair is generated and the private key is stored as GitHub Actions secrets. Never commit or share the private signing key.
 
 ## Status
 
 - [x] Rust workspace and shared evidence models
 - [x] Tauri 2 desktop shell
 - [x] Local domain validation
-- [x] CI and release workflow scaffolding
+- [x] CI and Linux AppImage release workflow
+- [x] CachyOS installer and desktop launcher
 - [ ] First live public-source collector
 - [ ] Persistent investigation storage
 - [ ] Evidence graph and report export
+- [ ] Signed in-app updates
 
 ## License
 
